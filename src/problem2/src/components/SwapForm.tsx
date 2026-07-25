@@ -46,7 +46,7 @@ export function SwapForm({ tokens, onSuccess }: SwapFormProps) {
     if (parsedAmount <= 0) return 'Amount must be greater than zero.'
     if (fromToken.symbol === toToken.symbol) return 'Choose two different tokens.'
     if (parsedAmount > fromToken.balance)
-      return `Insufficient balance — you hold ${formatTokenAmount(fromToken.balance)} ${fromToken.symbol}.`
+      return `Insufficient balance - you hold ${formatTokenAmount(fromToken.balance)} ${fromToken.symbol}.`
     return null
   }, [amount, parsedAmount, fromToken, toToken])
 
@@ -198,7 +198,7 @@ export function SwapForm({ tokens, onSuccess }: SwapFormProps) {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.4 0 0 5.4 0 12h4z" />
             </svg>
-            Confirming swap…
+            Confirming swap...
           </>
         ) : amount.trim() === '' ? (
           'Enter an amount'

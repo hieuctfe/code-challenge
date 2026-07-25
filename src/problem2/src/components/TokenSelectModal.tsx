@@ -98,7 +98,7 @@ export function TokenSelectModal({
         <ul className="slim-scroll mt-3 flex-1 overflow-y-auto px-2 pb-3">
           {filtered.length === 0 && (
             <li className="px-4 py-10 text-center text-sm text-slate-500">
-              No tokens match “{query}”.
+              No tokens match "{query}".
             </li>
           )}
           {filtered.map((token) => {

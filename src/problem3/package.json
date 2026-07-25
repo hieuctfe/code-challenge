@@ -2,7 +2,7 @@
   "name": "problem3-wallet-logic",
   "version": "1.0.0",
   "private": true,
-  "description": "Refactored WalletPage — pure wallet logic extracted and unit tested (99Tech Problem 3).",
+  "description": "Refactored WalletPage - pure wallet logic extracted and unit tested (99Tech Problem 3).",
   "type": "module",
   "scripts": {
     "test": "vitest run",

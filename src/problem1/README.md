@@ -1,4 +1,4 @@
-# Problem 1 — `sum_to_n`
+# Problem 1 - `sum_to_n`
 
 Three unique implementations of a function that returns the summation to `n`,
 e.g. `sum_to_n(5) === 1 + 2 + 3 + 4 + 5 === 15`.
@@ -7,10 +7,10 @@ e.g. `sum_to_n(5) === 1 + 2 + 3 + 4 + 5 === 15`.
 
 > Provide 3 unique implementations of the following function.
 >
-> **Input**: `n` — any integer. _Assuming this input will always produce a
+> **Input**: `n` - any integer. _Assuming this input will always produce a
 > result lesser than `Number.MAX_SAFE_INTEGER`._
 >
-> **Output**: `return` — summation to `n`, i.e.
+> **Output**: `return` - summation to `n`, i.e.
 > `sum_to_n(5) === 1 + 2 + 3 + 4 + 5 === 15`.
 
 The module (`sum_to_n.js`) is a side-effect-free ES module that exports all
@@ -33,7 +33,7 @@ negative `n`.
 ### b) Closed-form (Gauss)
 
 Uses the triangular-number identity. Important detail: the bare
-`n*(n+1)/2` does **not** satisfy the negative convention — for `n = -3` it
+`n*(n+1)/2` does **not** satisfy the negative convention - for `n = -3` it
 returns `3`, not `-6`. The sum of `n..-1` for `n < 0` equals the triangular
 number of `|n|`, negated. The implementation therefore uses the sign-aware
 closed form:
@@ -49,7 +49,7 @@ time.
 
 Peels one term off toward `0` per call: `f(n) = n + f(n ∓ 1)`. Clear and
 functional, but uses `O(n)` call-stack space (so very large `|n|` can overflow
-the stack — a trade-off documented here for completeness).
+the stack - a trade-off documented here for completeness).
 
 ## Negative-`n` assumption
 
@@ -77,7 +77,7 @@ success and log a message on failure.
 ## How to run tests
 
 Tests use Node's built-in test runner (`node:test`) and assertions
-(`node:assert/strict`) — **no dependencies to install**. Requires **Node 20+**.
+(`node:assert/strict`) - **no dependencies to install**. Requires **Node 20+**.
 
 ```bash
 node --test
@@ -88,7 +88,7 @@ npm test
 The suite (`sum_to_n.test.js`) covers:
 
 - the spec example (`sum_to_n(5) === 15`), zero, and one;
-- large values (`n=100 → 5050`, `n=1000 → 500500`);
+- large values (`n=100 -> 5050`, `n=1000 -> 500500`);
 - negatives (`-1`, `-3`, `-100`) per the convention above;
 - a parametrized **three-way-agreement** check asserting all three
   implementations return identical results for every `n` in `-50..50`.

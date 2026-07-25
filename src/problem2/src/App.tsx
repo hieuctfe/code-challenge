@@ -34,7 +34,7 @@ export default function App() {
 
         {usingFallback && !loading && (
           <p className="mt-4 max-w-md text-center text-[11px] text-amber-300/70">
-            Live prices are unreachable — showing a bundled snapshot so you can still explore the form.
+            Live prices are unreachable - showing a bundled snapshot so you can still explore the form.
           </p>
         )}
 

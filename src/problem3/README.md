@@ -1,4 +1,4 @@
-# Problem 3 — Messy React
+# Problem 3 - Messy React
 
 Analysis of the computational inefficiencies and anti-patterns in the original
 `WalletPage` component, grouped by category. Each item states **what** is wrong,
@@ -11,7 +11,7 @@ extracted into [`src/walletLogic.ts`](./src/walletLogic.ts) and unit tested in
 
 ## A. Bugs / Correctness
 
-### A1. `lhsPriority` is undefined — `ReferenceError`
+### A1. `lhsPriority` is undefined - `ReferenceError`
 ```ts
 const balancePriority = getPriority(balance.blockchain);
 if (lhsPriority > -99) { ... }   // lhsPriority was never declared
@@ -24,7 +24,7 @@ The filter computes `balancePriority` but then tests a variable named
 **Fix:** reference the variable that was actually computed
 (`balancePriority`), or inline the call.
 
-### A2. Inverted filter logic — keeps empty balances, drops real ones
+### A2. Inverted filter logic - keeps empty balances, drops real ones
 ```ts
 if (balancePriority > -99) {
   if (balance.amount <= 0) {
@@ -34,7 +34,7 @@ if (balancePriority > -99) {
 return false;      // drops every positive balance
 ```
 The predicate keeps balances whose `amount <= 0` and discards every balance with
-a positive amount — the opposite of what a wallet view wants. It also nests two
+a positive amount - the opposite of what a wallet view wants. It also nests two
 `if`s where one boolean expression is clearer.
 
 **Fix:**
@@ -57,7 +57,7 @@ not a valid comparator result. `Array.prototype.sort` expects a number; a
 non-number is coerced/treated inconsistently and produces implementation-defined,
 potentially unstable ordering.
 
-**Fix:** return `0` for the equal case — or simply
+**Fix:** return `0` for the equal case - or simply
 `return rightPriority - leftPriority;`.
 
 ### A4. `formattedBalances` is computed but never used; `rows` reads a field that doesn't exist
@@ -79,7 +79,7 @@ type system).
 **Fix:** map over the formatted array (or format inside the single map that
 builds the rows) so the value passed to `formattedAmount` actually exists.
 
-### A5. `prices[balance.currency]` can be `undefined` → `NaN`
+### A5. `prices[balance.currency]` can be `undefined` -> `NaN`
 ```ts
 const usdValue = prices[balance.currency] * balance.amount;
 ```
@@ -93,7 +93,7 @@ then renders into the UI.
 formatted: balance.amount.toFixed()
 ```
 With no digits argument, `toFixed` rounds to **zero** decimal places
-(`1.987.toFixed()` → `"2"`), which is almost certainly not intended for a token
+(`1.987.toFixed()` -> `"2"`), which is almost certainly not intended for a token
 amount and gives inconsistent precision.
 
 **Fix:** pass an explicit precision, e.g. `.toFixed(2)` (or a per-currency
@@ -109,7 +109,7 @@ const sortedBalances = useMemo(() => { ... }, [balances, prices]);
 ```
 The memoized computation uses only `balances` (and `getPriority`); it never reads
 `prices`. Listing `prices` forces the filter+sort to recompute every time prices
-tick — which, for a live price feed, can be many times per second — for no
+tick - which, for a live price feed, can be many times per second - for no
 benefit.
 
 **Fix:** depend on `[balances]` only (plus `getPriority` if it isn't hoisted).
@@ -117,7 +117,7 @@ benefit.
 ### B2. `getPriority` re-created every render and called O(n log n) times
 `getPriority` is redefined on every render (new function identity each time), and
 it is invoked *inside the sort comparator*, so for `n` items it runs roughly
-`O(n log n)` times per sort — recomputing the same constant priority for the same
+`O(n log n)` times per sort - recomputing the same constant priority for the same
 item repeatedly.
 
 **Fix:** hoist `getPriority` out of the component (it depends on nothing from
@@ -126,7 +126,7 @@ a `switch`. Better still, compute each item's priority **once** by mapping to
 `{ balance, priority }` before sorting, so the comparator just reads a number.
 
 ### B3. `formattedBalances` is redundant work
-As noted in A4, `formattedBalances` is fully computed and discarded — pure wasted
+As noted in A4, `formattedBalances` is fully computed and discarded - pure wasted
 work on every render. Removing it (and doing the formatting once, where it's
 actually consumed) eliminates an entire pass over the array.
 
@@ -167,7 +167,7 @@ inference do its job or annotate accurately.
 <WalletRow key={index} ... />
 ```
 Using the array index as a `key` breaks React's reconciliation when the list is
-reordered, inserted into, or filtered (exactly what this component does — it
+reordered, inserted into, or filtered (exactly what this component does - it
 sorts and filters). It can cause wrong rows to update, lost input state, and
 subtle rendering bugs.
 
@@ -189,7 +189,7 @@ const { children, ...rest } = props;
 
 ### D4. Building JSX in the component body / other minor smells
 - `classes` (used as `className={classes.row}`) is referenced but never
-  imported/shown — a dangling dependency.
+  imported/shown - a dangling dependency.
 - Deriving the JSX array inline (`rows`) mixes data transformation with markup;
   extracting the data pipeline into memoized derivations keeps render clean.
 
@@ -201,7 +201,7 @@ const { children, ...rest } = props;
 3. Single `useMemo` with correct deps `[balances]`, computing priority **once**
    per item, filtering `amount > 0`, and a complete comparator (`return 0`).
 4. One formatting pass, whose result is what `rows` actually consumes.
-5. Guarded `usdValue` (missing price → `0`, no `NaN`).
+5. Guarded `usdValue` (missing price -> `0`, no `NaN`).
 6. Explicit `toFixed(2)`.
 7. Stable `key={balance.currency}`.
 8. `type Props = BoxProps`, `children` handled cleanly.
@@ -229,18 +229,18 @@ src/problem3/
 - **`walletLogic.ts`** owns everything with behaviour worth testing:
   - `Blockchain` union, `WalletBalance` (with `blockchain`) and
     `FormattedWalletBalance` types.
-  - `getPriority` — hoisted, pure, backed by a `Record` lookup with a `-99`
+  - `getPriority` - hoisted, pure, backed by a `Record` lookup with a `-99`
     default.
-  - `filterAndSortBalances` — filters `amount > 0` **and** known priority, sorts
+  - `filterAndSortBalances` - filters `amount > 0` **and** known priority, sorts
     by priority descending with a **stable, total** comparator (computes each
     item's priority once, never inside the comparator).
-  - `formatBalances` — fixed-precision `formatted` string and a **guarded**
-    `usdValue` (missing price → `0`, never `NaN`).
-  - `getSortedFormattedBalances` — the composed pipeline the component consumes.
+  - `formatBalances` - fixed-precision `formatted` string and a **guarded**
+    `usdValue` (missing price -> `0`, never `NaN`).
+  - `getSortedFormattedBalances` - the composed pipeline the component consumes.
 - **`refactored.tsx`** is now a thin wrapper: it calls
   `getSortedFormattedBalances` inside a single `useMemo` and renders rows. It
   still references app-provided hooks (`useWalletBalances`, `usePrices`) via type
-  stubs — by design; the *logic* is the real, tested part.
+  stubs - by design; the *logic* is the real, tested part.
 
 ### Test coverage
 

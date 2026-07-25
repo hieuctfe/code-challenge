@@ -52,7 +52,7 @@ const WalletPage: React.FC<Props> = (props: Props) => {
 
   // Single memoised derivation delegating to the pure, tested pipeline. Depends
   // on both inputs it actually reads (`balances` for filter/sort, `prices` for
-  // USD valuation) — no stale reads, no over-invalidation on unrelated changes.
+  // USD valuation) - no stale reads, no over-invalidation on unrelated changes.
   const formattedBalances: FormattedWalletBalance[] = useMemo(
     () => getSortedFormattedBalances(balances, prices),
     [balances, prices],
