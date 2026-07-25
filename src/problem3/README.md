@@ -3,7 +3,9 @@
 Analysis of the computational inefficiencies and anti-patterns in the original
 `WalletPage` component, grouped by category. Each item states **what** is wrong,
 **why** it matters, and **how** to fix it. The corrected implementation lives in
-[`refactored.tsx`](./refactored.tsx).
+[`refactored.tsx`](./refactored.tsx), and the pure business logic it relies on is
+extracted into [`src/walletLogic.ts`](./src/walletLogic.ts) and unit tested in
+[`src/walletLogic.test.ts`](./src/walletLogic.test.ts).
 
 ---
 
@@ -203,3 +205,70 @@ const { children, ...rest } = props;
 6. Explicit `toFixed(2)`.
 7. Stable `key={balance.currency}`.
 8. `type Props = BoxProps`, `children` handled cleanly.
+
+---
+
+## Refactor structure
+
+To make the fixes verifiable (not just asserted), the business logic is
+**extracted out of the component** into a pure, framework-agnostic module and
+covered by unit tests:
+
+```
+src/problem3/
+├── refactored.tsx          # thin React component; imports the logic below
+├── src/
+│   ├── walletLogic.ts      # pure logic: types, getPriority, filter/sort/format
+│   └── walletLogic.test.ts # Vitest unit + regression tests (18 cases)
+├── package.json            # private; vitest + typescript dev deps
+├── tsconfig.json           # strict TS config
+├── vitest.config.ts        # test runner config
+└── .gitignore              # ignores node_modules/ and coverage/
+```
+
+- **`walletLogic.ts`** owns everything with behaviour worth testing:
+  - `Blockchain` union, `WalletBalance` (with `blockchain`) and
+    `FormattedWalletBalance` types.
+  - `getPriority` — hoisted, pure, backed by a `Record` lookup with a `-99`
+    default.
+  - `filterAndSortBalances` — filters `amount > 0` **and** known priority, sorts
+    by priority descending with a **stable, total** comparator (computes each
+    item's priority once, never inside the comparator).
+  - `formatBalances` — fixed-precision `formatted` string and a **guarded**
+    `usdValue` (missing price → `0`, never `NaN`).
+  - `getSortedFormattedBalances` — the composed pipeline the component consumes.
+- **`refactored.tsx`** is now a thin wrapper: it calls
+  `getSortedFormattedBalances` inside a single `useMemo` and renders rows. It
+  still references app-provided hooks (`useWalletBalances`, `usePrices`) via type
+  stubs — by design; the *logic* is the real, tested part.
+
+### Test coverage
+
+`walletLogic.test.ts` covers, among others:
+
+- `getPriority` returns correct values for every known chain and `-99` for
+  unknown ones.
+- Filtering keeps only positive balances with a known priority; drops zero,
+  negative, and unknown-chain balances.
+- Sorting is priority-descending and **stable** for equal priorities
+  (Zilliqa/Neo).
+- Formatting uses fixed decimals; `usdValue` is guarded against missing prices
+  (`0`, not `NaN`).
+- A dedicated **regressions** block that encodes the original bugs (A2, A3, A5,
+  A6) so they can never silently return.
+
+---
+
+## How to run
+
+From this folder (`src/problem3`):
+
+```bash
+npm install      # install vitest + typescript (dev deps only)
+npm test         # run the unit tests once (vitest run)
+npm run typecheck  # type-check with tsc --noEmit
+```
+
+Optional: `npm run test:watch` for watch mode during development.
+
+Current status: **18 tests passing**, type-check clean.
