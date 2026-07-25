@@ -13,9 +13,9 @@ e.g. `sum_to_n(5) === 1 + 2 + 3 + 4 + 5 === 15`.
 > **Output**: `return` - summation to `n`, i.e.
 > `sum_to_n(5) === 1 + 2 + 3 + 4 + 5 === 15`.
 
-The module (`sum_to_n.js`) is a side-effect-free ES module that exports all
+The module (`sum_to_n.mjs`) is a side-effect-free ES module that exports all
 three functions (`sum_to_n_a`, `sum_to_n_b`, `sum_to_n_c`), so it can be
-imported cleanly from tests or other code.
+imported cleanly from other code.
 
 ## The three approaches
 
@@ -65,30 +65,10 @@ consistent behaviour:
 ## Run the demo
 
 ```bash
-node sum_to_n.js
-# or
-npm start
+node sum_to_n.mjs
 ```
 
 A clean run prints `all checks passed`. The file contains `console.assert`
 sanity checks (behind an `import.meta` main-module guard) that stay silent on
-success and log a message on failure.
-
-## How to run tests
-
-Tests use Node's built-in test runner (`node:test`) and assertions
-(`node:assert/strict`) - **no dependencies to install**. Requires **Node 20+**.
-
-```bash
-node --test
-# or
-npm test
-```
-
-The suite (`sum_to_n.test.js`) covers:
-
-- the spec example (`sum_to_n(5) === 15`), zero, and one;
-- large values (`n=100 -> 5050`, `n=1000 -> 500500`);
-- negatives (`-1`, `-3`, `-100`) per the convention above;
-- a parametrized **three-way-agreement** check asserting all three
-  implementations return identical results for every `n` in `-50..50`.
+success and log a message on failure. Requires **Node 20+**, no dependencies to
+install.

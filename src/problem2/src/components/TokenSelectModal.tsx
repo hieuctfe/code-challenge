@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Token } from '../types'
 import { TokenIcon } from './TokenIcon'
 import { formatBalance, formatUsd } from '../utils/format'
+import { localeFor } from '../i18n'
 
 interface TokenSelectModalProps {
   open: boolean
@@ -25,6 +27,8 @@ export function TokenSelectModal({
   onSelect,
   onClose,
 }: TokenSelectModalProps) {
+  const { t, i18n } = useTranslation()
+  const locale = localeFor(i18n.language)
   const [query, setQuery] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -59,7 +63,7 @@ export function TokenSelectModal({
       className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="Select a token"
+      aria-label={t('modal.selectAToken')}
     >
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
@@ -67,10 +71,10 @@ export function TokenSelectModal({
       />
       <div className="relative z-10 flex max-h-[85vh] w-full flex-col overflow-hidden rounded-t-3xl border border-white/10 bg-slate-900/95 shadow-2xl animate-scale-in sm:max-w-md sm:rounded-3xl">
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-          <h2 className="text-base font-semibold text-white">Select a token</h2>
+          <h2 className="text-base font-semibold text-white">{t('modal.selectAToken')}</h2>
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t('a11y.close')}
             className="rounded-full p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -89,7 +93,7 @@ export function TokenSelectModal({
               ref={inputRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search name or ticker"
+              placeholder={t('modal.searchPlaceholder')}
               className="w-full bg-transparent text-sm text-white placeholder:text-slate-500 focus:outline-none"
             />
           </div>
@@ -98,7 +102,7 @@ export function TokenSelectModal({
         <ul className="slim-scroll mt-3 flex-1 overflow-y-auto px-2 pb-3">
           {filtered.length === 0 && (
             <li className="px-4 py-10 text-center text-sm text-slate-500">
-              No tokens match "{query}".
+              {t('modal.noMatch', { query })}
             </li>
           )}
           {filtered.map((token) => {
@@ -117,12 +121,12 @@ export function TokenSelectModal({
                   <TokenIcon symbol={token.symbol} iconUrl={token.iconUrl} size={34} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium text-white">{token.symbol}</span>
-                    <span className="block text-xs text-slate-400">{formatUsd(token.price)}</span>
+                    <span className="block text-xs text-slate-400">{formatUsd(token.price, locale)}</span>
                   </span>
                   <span className="text-right text-xs text-slate-400">
-                    <span className="block text-slate-500">Balance</span>
+                    <span className="block text-slate-500">{t('modal.balance')}</span>
                     <span className="block font-medium text-slate-300">
-                      {formatBalance(token.balance)}
+                      {formatBalance(token.balance, locale)}
                     </span>
                   </span>
                 </button>

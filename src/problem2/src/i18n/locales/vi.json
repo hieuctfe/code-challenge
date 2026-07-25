@@ -1,0 +1,60 @@
+{
+  "app": {
+    "title": "Swap · Sàn đổi tiền",
+    "fallbackBanner": "Không thể lấy giá trực tiếp - đang hiển thị dữ liệu ngoại tuyến để bạn vẫn dùng thử biểu mẫu.",
+    "footer": "Giá từ interview.switcheo.com · Chỉ để minh hoạ, không có giao dịch thật"
+  },
+  "form": {
+    "title": "Đổi token",
+    "subtitle": "Đổi token trong tích tắc",
+    "liveRates": "Giá trực tiếp",
+    "youPay": "Bạn trả",
+    "youReceive": "Bạn nhận",
+    "rateLabel": "Tỷ giá",
+    "rate": "1 {{fromSymbol}} = {{rate}} {{toSymbol}}",
+    "confirming": "Đang xác nhận...",
+    "enterAmountShort": "Nhập số lượng",
+    "confirmSwap": "XÁC NHẬN ĐỔI",
+    "receiveHint": "Bạn sẽ nhận ≈ {{amount}} {{symbol}} ({{usd}})"
+  },
+  "validation": {
+    "enterAmount": "Nhập số lượng cần đổi.",
+    "validNumber": "Nhập một số hợp lệ.",
+    "greaterThanZero": "Số lượng phải lớn hơn 0.",
+    "differentTokens": "Chọn hai token khác nhau.",
+    "insufficientBalance": "Số dư không đủ - bạn đang có {{amount}} {{symbol}}."
+  },
+  "field": {
+    "balance": "Số dư:",
+    "max": "TỐI ĐA",
+    "amountPlaceholder": "0.0",
+    "select": "Chọn",
+    "selectAria": "chọn"
+  },
+  "modal": {
+    "selectAToken": "Chọn token",
+    "searchPlaceholder": "Tìm theo tên hoặc mã",
+    "noMatch": "Không có token nào khớp \"{{query}}\".",
+    "balance": "Số dư"
+  },
+  "toast": {
+    "swapConfirmed": "Đã xác nhận đổi",
+    "swapDetail": "{{fromAmount}} {{from}} → {{toAmount}} {{to}}",
+    "swapFailed": "Đổi thất bại",
+    "retry": "Thử lại"
+  },
+  "errors": {
+    "network": "Lỗi mạng - vui lòng thử lại.",
+    "insufficientLiquidity": "Không đủ thanh khoản cho giao dịch này.",
+    "generic": "Đã xảy ra lỗi - vui lòng thử lại."
+  },
+  "a11y": {
+    "swapDirection": "Đổi chiều",
+    "fieldAmount": "Số lượng {{label}}",
+    "fieldToken": "{{label}} token: {{symbol}}",
+    "close": "Đóng",
+    "dismiss": "Bỏ qua",
+    "tokenIcon": "Biểu tượng {{symbol}}",
+    "refreshRates": "Làm mới tỷ giá"
+  }
+}

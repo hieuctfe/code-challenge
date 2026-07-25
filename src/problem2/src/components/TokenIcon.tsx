@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface TokenIconProps {
   symbol: string
@@ -12,6 +13,7 @@ interface TokenIconProps {
  * monogram badge when the image is missing or fails to load.
  */
 export function TokenIcon({ symbol, iconUrl, size = 28, className = '' }: TokenIconProps) {
+  const { t } = useTranslation()
   const [failed, setFailed] = useState(false)
   const dimension = { width: size, height: size }
 
@@ -38,7 +40,7 @@ export function TokenIcon({ symbol, iconUrl, size = 28, className = '' }: TokenI
   return (
     <img
       src={iconUrl}
-      alt={`${symbol} icon`}
+      alt={t('a11y.tokenIcon', { symbol })}
       loading="lazy"
       width={size}
       height={size}

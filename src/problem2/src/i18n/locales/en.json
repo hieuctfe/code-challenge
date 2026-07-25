@@ -1,0 +1,60 @@
+{
+  "app": {
+    "title": "Swap · Currency Exchange",
+    "fallbackBanner": "Live prices are unreachable - showing a bundled snapshot so you can still explore the form.",
+    "footer": "Prices from interview.switcheo.com · Demo only, no real transactions"
+  },
+  "form": {
+    "title": "Swap",
+    "subtitle": "Trade tokens in an instant",
+    "liveRates": "Live rates",
+    "youPay": "You pay",
+    "youReceive": "You receive",
+    "rateLabel": "Rate",
+    "rate": "1 {{fromSymbol}} = {{rate}} {{toSymbol}}",
+    "confirming": "Confirming swap...",
+    "enterAmountShort": "Enter an amount",
+    "confirmSwap": "CONFIRM SWAP",
+    "receiveHint": "You will receive ≈ {{amount}} {{symbol}} ({{usd}})"
+  },
+  "validation": {
+    "enterAmount": "Enter an amount to swap.",
+    "validNumber": "Enter a valid number.",
+    "greaterThanZero": "Amount must be greater than zero.",
+    "differentTokens": "Choose two different tokens.",
+    "insufficientBalance": "Insufficient balance - you hold {{amount}} {{symbol}}."
+  },
+  "field": {
+    "balance": "Balance:",
+    "max": "MAX",
+    "amountPlaceholder": "0.0",
+    "select": "Select",
+    "selectAria": "select"
+  },
+  "modal": {
+    "selectAToken": "Select a token",
+    "searchPlaceholder": "Search name or ticker",
+    "noMatch": "No tokens match \"{{query}}\".",
+    "balance": "Balance"
+  },
+  "toast": {
+    "swapConfirmed": "Swap confirmed",
+    "swapDetail": "{{fromAmount}} {{from}} → {{toAmount}} {{to}}",
+    "swapFailed": "Swap failed",
+    "retry": "Retry"
+  },
+  "errors": {
+    "network": "Network error - please try again.",
+    "insufficientLiquidity": "Insufficient liquidity for this trade.",
+    "generic": "Something went wrong - please try again."
+  },
+  "a11y": {
+    "swapDirection": "Swap direction",
+    "fieldAmount": "{{label}} amount",
+    "fieldToken": "{{label}} token: {{symbol}}",
+    "close": "Close",
+    "dismiss": "Dismiss",
+    "tokenIcon": "{{symbol}} icon",
+    "refreshRates": "Refresh rates"
+  }
+}

@@ -3,7 +3,7 @@
 Analysis of the computational inefficiencies and anti-patterns in the original
 `WalletPage` component, grouped by category. Each item states **what** is wrong,
 **why** it matters, and **how** to fix it. The corrected implementation lives in
-[`refactored.tsx`](./refactored.tsx), and the pure business logic it relies on is
+[`src/refactored.tsx`](./src/refactored.tsx), and the pure business logic it relies on is
 extracted into [`src/walletLogic.ts`](./src/walletLogic.ts) and unit tested in
 [`src/walletLogic.test.ts`](./src/walletLogic.test.ts).
 
@@ -216,8 +216,8 @@ covered by unit tests:
 
 ```
 src/problem3/
-├── refactored.tsx          # thin React component; imports the logic below
 ├── src/
+│   ├── refactored.tsx      # thin React component; imports the logic below
 │   ├── walletLogic.ts      # pure logic: types, getPriority, filter/sort/format
 │   └── walletLogic.test.ts # Vitest unit + regression tests (18 cases)
 ├── package.json            # private; vitest + typescript dev deps

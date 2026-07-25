@@ -2,12 +2,36 @@ import { describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { SwapForm } from './SwapForm'
+import { SwapError, type SwapIntent, type SwapReceipt } from '../services/swapService'
 import { ETH, TEST_TOKENS, USDC } from '../test/fixtures'
 
-function renderForm() {
+/** Build a deterministic receipt from an intent, applying the trade to balances. */
+function receiptFor(intent: SwapIntent): SwapReceipt {
+  return {
+    txHash: '0xtest',
+    ...intent,
+    executedAt: 0,
+    newBalances: {
+      ETH: 10 - (intent.from === 'ETH' ? intent.fromAmount : 0),
+      USDC: 5000 + (intent.to === 'USDC' ? intent.toAmount : 0),
+    },
+  }
+}
+
+function renderForm(
+  overrides: Partial<React.ComponentProps<typeof SwapForm>> = {},
+) {
   const onSuccess = vi.fn()
-  render(<SwapForm tokens={TEST_TOKENS} onSuccess={onSuccess} />)
-  return { onSuccess }
+  const onError = vi.fn()
+  // Default submit resolves on a short delay so the loading state is observable.
+  const onSubmit = vi.fn(
+    (intent: SwapIntent) =>
+      new Promise<SwapReceipt>((resolve) => setTimeout(() => resolve(receiptFor(intent)), 20)),
+  )
+  render(
+    <SwapForm tokens={TEST_TOKENS} onSubmit={onSubmit} onSuccess={onSuccess} onError={onError} {...overrides} />,
+  )
+  return { onSuccess, onError, onSubmit }
 }
 
 const payInput = () => screen.getByLabelText('You pay amount') as HTMLInputElement
@@ -96,29 +120,50 @@ describe('SwapForm', () => {
     expect(screen.getByRole('button', { name: 'You pay token: WBTC' })).toBeInTheDocument()
   })
 
-  it('shows a loading state then reports success on submit', async () => {
+  it('shows a loading state then reports success (with adjusted balances) on submit', async () => {
     const user = userEvent.setup()
     const { onSuccess } = renderForm()
     await user.type(payInput(), '2')
 
     await user.click(screen.getByRole('button', { name: 'CONFIRM SWAP' }))
 
-    // Immediately after clicking, the mocked round-trip is in flight.
+    // Immediately after clicking, the round-trip is in flight.
     expect(screen.getByRole('button', { name: /confirming swap/i })).toBeDisabled()
 
     await waitFor(
       () => {
-        expect(onSuccess).toHaveBeenCalledWith({
-          fromAmount: 2,
-          from: 'ETH',
-          toAmount: 4000,
-          to: 'USDC',
-        })
+        expect(onSuccess).toHaveBeenCalledWith(
+          expect.objectContaining({ fromAmount: 2, from: 'ETH', toAmount: 4000, to: 'USDC' }),
+        )
       },
       { timeout: 3000 },
     )
 
+    // The receipt carries balances reduced for the "pay" side.
+    const receipt = onSuccess.mock.calls[0][0] as SwapReceipt
+    expect(receipt.newBalances.ETH).toBe(8) // 10 - 2
+
     // The amount resets after a successful swap.
     expect(payInput().value).toBe('')
+  })
+
+  it('reports an error and re-enables submit when the swap fails', async () => {
+    const user = userEvent.setup()
+    const onError = vi.fn()
+    const onSubmit = vi.fn(() => Promise.reject(new SwapError('NETWORK')))
+    const { onSuccess } = renderForm({ onSubmit, onError })
+    await user.type(payInput(), '2')
+
+    await user.click(screen.getByRole('button', { name: 'CONFIRM SWAP' }))
+
+    await waitFor(() => expect(onError).toHaveBeenCalled())
+    const [error, retry] = onError.mock.calls[0]
+    expect(error).toBeInstanceOf(SwapError)
+    expect(typeof retry).toBe('function')
+
+    // No success, amount preserved for retry, button usable again.
+    expect(onSuccess).not.toHaveBeenCalled()
+    expect(payInput().value).toBe('2')
+    expect(screen.getByRole('button', { name: 'CONFIRM SWAP' })).toBeEnabled()
   })
 })

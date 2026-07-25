@@ -19,7 +19,7 @@
  *   c) recursion          : O(n) time,  O(n) stack space
  *
  * This module has NO top-level side effects, so it is safe to import from
- * tests or other modules. A tiny runnable demo lives behind the
+ * other modules. A tiny runnable demo lives behind the
  * `import.meta` main-module guard at the bottom of the file.
  */
 
@@ -77,9 +77,9 @@ export const sum_to_n_c = function (n) {
 };
 
 // --- Runnable demo --------------------------------------------------------
-// Only runs when this file is executed directly (`node sum_to_n.js`),
-// never when imported. Keeps the module free of import-time side effects.
-if (import.meta.url === `file://${process.argv[1]}`) {
+// The self-test lives in a function so the caller at the bottom can be
+// adjusted freely. Keeps the module free of import-time side effects.
+function runSelfTest() {
   const cases = [
     [5, 15],
     [1, 1],
@@ -103,3 +103,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   console.log("all checks passed");
 }
+
+
+
+
+
+const n = 5;
+
+runSelfTest();
+console.log(`sum_to_n_a(${n}) =`, sum_to_n_a(n));
+console.log(`sum_to_n_b(${n}) =`, sum_to_n_b(n));
+console.log(`sum_to_n_c(${n}) =`, sum_to_n_c(n));

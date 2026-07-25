@@ -17,8 +17,17 @@ loading state and a success toast.
 - **Inline validation** covering empty / non-numeric / zero / negative amounts,
   identical from/to tokens, and amounts exceeding the mocked wallet balance.
   The submit button is disabled while the form is invalid.
-- **Mocked submit** - `CONFIRM SWAP` shows a spinner for ~1.5s, then a success
-  toast summarizing the trade. No real transaction is made.
+- **Backend-like submit** - `CONFIRM SWAP` calls a mock swap *service* with
+  network-like latency; on success it updates the wallet balances (the "pay"
+  token goes down, the "receive" token goes up) and shows a summary toast. The
+  service also simulates intermittent failures, surfaced as an error toast with
+  a **Retry** action.
+- **Live-market refresh** - a refresh control re-quotes prices with a small
+  random drift so the rate visibly moves, like a live feed.
+- **Internationalized (i18n)** - all UI text is translatable via `react-i18next`
+  (English + Vietnamese shipped). A top-right language switcher persists the
+  choice to `localStorage`, and number/currency formatting follows the active
+  locale.
 - **Graceful token icons** - remote SVGs with a generated monogram fallback
   when an icon is missing.
 - **Resilient data loading** - if the live prices endpoint is unreachable the
@@ -30,6 +39,7 @@ loading state and a success toast.
 
 - **Vite** (bonus points) + **React 18** + **TypeScript**
 - **Tailwind CSS v3** for styling
+- **react-i18next** (+ `i18next-browser-languagedetector`) for localization
 - No component library - all UI is hand-built and self-contained.
 
 ## Getting started
@@ -109,40 +119,69 @@ stay resilient to styling changes.
 
 ## Notes on mocking
 
-- **Wallet balances** are mocked deterministically from each token's symbol and
-  price (roughly \$500-\$10,000 of holdings per token) so validation against a
-  balance is demonstrable.
-- **The swap submission** is mocked with a `setTimeout` delay - there is no
-  backend and no on-chain activity.
+- **Mock service layer** (`src/services/`): `pricesService.fetchPrices` owns the
+  real network call + fallback (and an optional jitter for the refresh
+  re-quote); `swapService.executeSwap` simulates a backend round-trip with
+  injectable latency, an intermittent typed `SwapError`, and a receipt whose
+  `newBalances` reflect the trade. All non-determinism (latency, RNG, clock) is
+  injectable so tests are deterministic.
+- **Wallet** (`src/hooks/useWallet.ts`): owns the mutable balances (seeded from
+  each token's deterministic mocked holding, ~\$500-\$10,000 worth) and applies
+  the service's `newBalances` after each successful swap, so holdings evolve like
+  a real account. No real transaction or on-chain activity occurs.
 - A **bundled fallback price list** (`src/data/fallbackPrices.ts`) is a snapshot
   of the live endpoint, used only when the network request fails.
+
+## Internationalization
+
+- Setup lives in `src/i18n/` - `index.ts` initializes i18next synchronously with
+  inline resources (no HTTP backend) and a `localStorage`/`navigator` detector;
+  `locales/en.json` and `locales/vi.json` are the message catalogs. `en.json` is
+  the source of truth: `locales/types.ts` derives `TranslationCatalog` from it
+  (via `typeof`), which both powers `t()`'s compile-time key checking and forces
+  every other locale to expose the same keys (a mismatch fails `tsc`). The
+  `i18n.test.ts` parity check is a runtime backstop.
+- Components pull text via `useTranslation()` / `t('key', { ...vars })`.
+  `formatTokenAmount` / `formatUsd` / `formatBalance` take an optional locale
+  (default `en-US`) so grouping/decimal separators follow the language.
+- Add a language by dropping in a new `locales/<lng>.json` catalog and listing
+  the code in `SUPPORTED_LANGUAGES` (`src/i18n/index.ts`). JSON keeps the
+  catalogs translator/TMS-friendly.
 
 ## Project structure
 
 ```
 src/
   components/
-    SwapForm.tsx          # form state, validation, submit flow
+    SwapForm.tsx          # form state, validation, service-backed submit
     TokenField.tsx        # one "pay"/"receive" row (amount + token trigger)
     TokenSelectModal.tsx  # searchable token picker dialog
     TokenIcon.tsx         # remote icon with monogram fallback
-    Toast.tsx             # success toast
+    Toast.tsx             # success / error toast (with optional retry)
+    LanguageSwitcher.tsx  # top-right EN/VI toggle (persisted)
+  services/
+    pricesService.ts      # real fetch + fallback (+ jitter on refresh)
+    swapService.ts        # mock swap backend: latency, failures, receipt
   hooks/
-    usePrices.ts          # fetch + fallback, returns tradable tokens
-    usePrices.test.ts     # hook test (fetch stubbed)
+    usePrices.ts          # loads prices via the service, exposes refresh()
+    useWallet.ts          # mutable balances + submit orchestration
   utils/
     swap.ts               # token building, rate math, conversion
-    swap.test.ts          # pure-logic unit tests
-    format.ts             # number / currency formatting
-    format.test.ts        # formatter / parser unit tests
+    format.ts             # locale-aware number / currency formatting
   data/
     fallbackPrices.ts     # offline snapshot of prices.json
+  i18n/
+    index.ts              # i18next init + localeFor() helper
+    locales/{en,vi}.json  # message catalogs (JSON, TMS-friendly)
+    locales/types.ts      # TranslationCatalog derived from en.json
   test/
-    setup.ts              # jest-dom matchers + cleanup (Vitest setupFiles)
+    setup.ts              # jest-dom + i18n init + cleanup (Vitest setupFiles)
     fixtures.ts           # deterministic Token fixtures for tests
   types.ts                # shared types
-  App.tsx                 # layout, loading skeleton, toast wiring
+  App.tsx                 # layout, wallet wiring, toast + language switcher
 ```
+
+Each source module has a colocated `*.test.ts(x)`.
 
 `SwapForm.test.tsx` and `TokenSelectModal.test.tsx` sit alongside their
 components in `src/components/`.

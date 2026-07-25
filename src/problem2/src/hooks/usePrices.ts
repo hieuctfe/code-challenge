@@ -1,9 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { Token } from '../types'
-import { buildTokens } from '../utils/swap'
-import { FALLBACK_PRICES } from '../data/fallbackPrices'
-
-const PRICES_URL = 'https://interview.switcheo.com/prices.json'
+import { fetchPrices } from '../services/pricesService'
 
 interface PricesState {
   tokens: Token[]
@@ -12,12 +9,17 @@ interface PricesState {
   usingFallback: boolean
 }
 
+interface UsePricesResult extends PricesState {
+  /** Re-fetch prices with a small live-market jitter so rates visibly move. */
+  refresh: () => void
+}
+
 /**
- * Loads token prices from the Switcheo endpoint and derives the tradable token
- * list. Never throws: on any failure it falls back to a bundled snapshot so the
- * form always renders.
+ * Loads token prices via the prices service (real fetch + graceful fallback)
+ * and exposes a `refresh` that simulates a live-market re-quote. Never throws:
+ * the service always resolves with data so the form always renders.
  */
-export function usePrices(): PricesState {
+export function usePrices(): UsePricesResult {
   const [state, setState] = useState<PricesState>({
     tokens: [],
     loading: true,
@@ -26,30 +28,19 @@ export function usePrices(): PricesState {
 
   useEffect(() => {
     let cancelled = false
-
-    async function load() {
-      // Small artificial delay so the loading skeleton is perceptible.
-      const settle = (tokens: Token[], usingFallback: boolean) => {
-        if (!cancelled) setState({ tokens, loading: false, usingFallback })
-      }
-
-      try {
-        const res = await fetch(PRICES_URL, { cache: 'no-store' })
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const data = await res.json()
-        const tokens = buildTokens(data)
-        if (tokens.length === 0) throw new Error('No priced tokens')
-        settle(tokens, false)
-      } catch {
-        settle(buildTokens(FALLBACK_PRICES), true)
-      }
-    }
-
-    load()
+    fetchPrices().then(({ tokens, usingFallback }) => {
+      if (!cancelled) setState({ tokens, loading: false, usingFallback })
+    })
     return () => {
       cancelled = true
     }
   }, [])
 
-  return state
+  const refresh = useCallback(() => {
+    fetchPrices({ jitter: true }).then(({ tokens, usingFallback }) => {
+      setState((prev) => ({ ...prev, tokens, usingFallback }))
+    })
+  }, [])
+
+  return { ...state, refresh }
 }
