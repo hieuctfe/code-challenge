@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { SwapForm } from './SwapForm'
-import { TEST_TOKENS } from '../test/fixtures'
+import { ETH, TEST_TOKENS, USDC } from '../test/fixtures'
 
 function renderForm() {
   const onSuccess = vi.fn()
@@ -49,6 +49,22 @@ describe('SwapForm', () => {
     await user.type(payInput(), '999') // ETH balance is 10
     expect(screen.getAllByText(/insufficient balance/i).length).toBeGreaterThan(0)
     expect(submitButton()).toBeDisabled()
+  })
+
+  it('clicking MAX fills a spendable amount without an insufficient-balance error', async () => {
+    // Regression: a balance with many decimals used to be rounded UP by MAX
+    // (toFixed), producing an amount just above the balance and tripping the
+    // insufficient-balance check.
+    const user = userEvent.setup()
+    const onSuccess = vi.fn()
+    const eth = { ...ETH, balance: 3.123456789 }
+    render(<SwapForm tokens={[eth, USDC].sort((a, b) => a.symbol.localeCompare(b.symbol))} onSuccess={onSuccess} />)
+
+    await user.click(screen.getByRole('button', { name: 'MAX' }))
+
+    expect(screen.queryByText(/insufficient balance/i)).not.toBeInTheDocument()
+    expect(Number(payInput().value)).toBeLessThanOrEqual(eth.balance)
+    expect(screen.getByRole('button', { name: 'CONFIRM SWAP' })).toBeEnabled()
   })
 
   it('computes the receive amount and enables submit for a valid amount', async () => {

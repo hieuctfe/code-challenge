@@ -45,7 +45,10 @@ export function SwapForm({ tokens, onSuccess }: SwapFormProps) {
     if (Number.isNaN(parsedAmount)) return 'Enter a valid number.'
     if (parsedAmount <= 0) return 'Amount must be greater than zero.'
     if (fromToken.symbol === toToken.symbol) return 'Choose two different tokens.'
-    if (parsedAmount > fromToken.balance)
+    // Tolerate floating-point noise so an exact MAX (or a value equal to the
+    // balance) is not wrongly rejected. The tolerance scales with magnitude.
+    const balanceEpsilon = Math.max(1e-8, Math.abs(fromToken.balance) * 1e-9)
+    if (parsedAmount > fromToken.balance + balanceEpsilon)
       return `Insufficient balance - you hold ${formatTokenAmount(fromToken.balance)} ${fromToken.symbol}.`
     return null
   }, [amount, parsedAmount, fromToken, toToken])
@@ -75,7 +78,11 @@ export function SwapForm({ tokens, onSuccess }: SwapFormProps) {
 
   function handleMax() {
     setTouched(true)
-    setAmount(String(Number(fromToken.balance.toFixed(8))))
+    // Floor to 8 decimals rather than round: rounding to nearest can produce a
+    // value slightly above the real balance and trip the insufficient-balance
+    // check. Flooring guarantees the MAX amount is always spendable.
+    const max = Math.floor(fromToken.balance * 1e8) / 1e8
+    setAmount(String(max))
   }
 
   async function handleSubmit(e: React.FormEvent) {
