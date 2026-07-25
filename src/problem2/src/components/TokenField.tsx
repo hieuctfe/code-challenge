@@ -73,6 +73,8 @@ export function TokenField({
         <button
           type="button"
           onClick={onOpenSelect}
+          aria-label={`${label} token: ${token ? token.symbol : 'select'}`}
+          aria-haspopup="dialog"
           className="flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] py-1.5 pl-1.5 pr-3 font-semibold text-white transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
         >
           {token ? (
