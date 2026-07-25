@@ -36,12 +36,69 @@ loading state and a success toast.
 
 ```bash
 npm install
-npm run dev      # start the dev server (Vite prints the local URL)
-npm run build    # type-check + production build into dist/
-npm run preview  # preview the production build
+npm run dev       # start the dev server (Vite prints the local URL)
+npm run build     # type-check + production build into dist/
+npm run preview   # preview the production build
+npm test          # run the unit / component test suite once
+npm run test:watch  # re-run tests on change
+npm run typecheck # type-check without emitting
 ```
 
 Requires Node 18+ (developed on Node 20).
+
+## Testing
+
+**Stack:** [Vitest](https://vitest.dev/) + [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
+running in a `jsdom` environment, with `@testing-library/jest-dom` matchers and
+`@testing-library/user-event` for realistic interactions.
+
+```bash
+npm test              # single run (CI-friendly)
+npm run test:watch    # watch mode
+npm run test:coverage # run with a V8 coverage report
+```
+
+Configuration lives in the `test` block of `vite.config.ts` (`globals: true`,
+`environment: 'jsdom'`, `setupFiles: ['./src/test/setup.ts']`). Test files
+(`*.test.ts`/`*.test.tsx`) and the `src/test/` helpers are excluded from the
+production `tsc` build, so `npm run build` stays clean.
+
+**What's covered (53 tests):**
+
+- **`utils/swap.ts`** — exchange-rate math via USD prices, same-token and
+  missing-price edge cases, conversion (including non-finite amounts and
+  round-trips), and `buildTokens` (alphabetical sort, deterministic mocked
+  balance, dedupe-by-latest-date, dropping non-positive / malformed records).
+- **`utils/format.ts`** — the tolerant amount parser (empty, non-numeric,
+  thousands separators, trailing dot, very large / very small, negatives) and
+  the magnitude-aware token / USD / balance formatters.
+- **`hooks/usePrices.ts`** — network success path plus graceful fallback to the
+  bundled snapshot on fetch failure / non-OK response, with `fetch` stubbed via
+  `vi.stubGlobal` (deterministic and offline).
+- **`SwapForm`** — renders the default pair and rate line; inline validation for
+  empty / zero / negative / non-numeric / over-balance amounts (with submit
+  disabled); receive-amount computation; the swap-direction flip; token
+  selection with the opposite side disabled; and the submit flow (loading state
+  → mocked ~1.5 s round-trip → `onSuccess`).
+- **`TokenSelectModal`** — search filtering, empty state, selection callback,
+  the disabled opposite-side token, and `Esc`-to-close.
+
+Tests query by role and accessible name (not brittle CSS selectors), so they
+stay resilient to styling changes.
+
+## Architecture / best practices
+
+- **Pure logic is decoupled from React.** All rate/conversion math, token
+  building, and the price dedupe-by-latest-date transform live as exported pure
+  functions in `utils/` (`buildTokens`, `exchangeRate`, `convert`) and are unit
+  tested in isolation from any component or network call.
+- **Data fetching is isolated in a hook.** `usePrices` owns the fetch, the
+  fallback, and the loading flag; it never throws, so the UI always renders.
+- **Components stay presentational and prop-driven.** `SwapForm` receives its
+  token list as a prop, which keeps it deterministic and trivially testable
+  without mocking the network.
+- **Accessibility as a contract.** Interactive controls carry `aria-label`s and
+  proper roles (`dialog`, `status`), which double as stable test hooks.
 
 ## Data sources
 
@@ -72,11 +129,20 @@ src/
     Toast.tsx             # success toast
   hooks/
     usePrices.ts          # fetch + fallback, returns tradable tokens
+    usePrices.test.ts     # hook test (fetch stubbed)
   utils/
     swap.ts               # token building, rate math, conversion
+    swap.test.ts          # pure-logic unit tests
     format.ts             # number / currency formatting
+    format.test.ts        # formatter / parser unit tests
   data/
     fallbackPrices.ts     # offline snapshot of prices.json
+  test/
+    setup.ts              # jest-dom matchers + cleanup (Vitest setupFiles)
+    fixtures.ts           # deterministic Token fixtures for tests
   types.ts                # shared types
   App.tsx                 # layout, loading skeleton, toast wiring
 ```
+
+`SwapForm.test.tsx` and `TokenSelectModal.test.tsx` sit alongside their
+components in `src/components/`.
