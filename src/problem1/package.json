@@ -1,0 +1,15 @@
+{
+  "name": "problem1-sum-to-n",
+  "version": "1.0.0",
+  "description": "Three implementations of sum_to_n with unit tests (99Tech frontend challenge, Problem 1).",
+  "type": "module",
+  "private": true,
+  "main": "sum_to_n.js",
+  "scripts": {
+    "test": "node --test",
+    "start": "node sum_to_n.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
